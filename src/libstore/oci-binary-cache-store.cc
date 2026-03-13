@@ -276,11 +276,24 @@ std::string OCIBinaryCacheStore::resolveManifest(const std::string & tag)
 
     auto manifest = nlohmann::json::parse(result.data);
 
+    if (!manifest.is_object() || !manifest.contains("layers") || !manifest["layers"].is_array())
+        throw Error("invalid OCI manifest structure for tag '%s'", tag);
+
     auto & layers = manifest["layers"];
     if (layers.empty())
         throw Error("OCI manifest for tag '%s' has no layers", tag);
 
-    return layers[0]["digest"].get<std::string>();
+    if (!layers[0].is_object() || !layers[0].contains("digest") || !layers[0]["digest"].is_string())
+        throw Error("OCI manifest layer for tag '%s' has no valid digest", tag);
+
+    auto digest = layers[0]["digest"].get<std::string>();
+
+    // Validate digest format: must be "algorithm:hex" (e.g., "sha256:abcdef...")
+    auto colonPos = digest.find(':');
+    if (colonPos == std::string::npos || colonPos == 0 || colonPos == digest.size() - 1)
+        throw Error("OCI manifest layer for tag '%s' has an invalid digest format", tag);
+
+    return digest;
 }
 
 bool OCIBinaryCacheStore::fileExists(const std::string & path)
