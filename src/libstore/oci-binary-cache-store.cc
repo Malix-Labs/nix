@@ -127,21 +127,15 @@ std::string OCIBinaryCacheStore::fetchToken(const std::string & scope)
             return it->second;
     }
 
-    // Try an unauthenticated request to get the WWW-Authenticate challenge.
-    std::string wwwAuth;
+    // Try an unauthenticated request to see if the registry requires auth.
     try {
         FileTransferRequest pingReq(apiBase() + "/");
         pingReq.method = HttpMethod::Get;
         fileTransfer->download(pingReq);
         // If we get here, the registry doesn't require authentication.
         return "";
-    } catch (FileTransferError & e) {
-        // We need the WWW-Authenticate header from the 401 response.
-        // The Nix FileTransfer API doesn't expose response headers directly,
-        // so we parse the error message or use a fallback approach.
-        //
-        // For known registries, we use well-known token endpoints.
-        // This is the standard approach used by Docker/OCI clients.
+    } catch (FileTransferError &) {
+        // Registry likely requires authentication; proceed to fetch a token.
     }
 
     // Construct the token URL based on the registry.
@@ -178,7 +172,8 @@ std::string OCIBinaryCacheStore::fetchToken(const std::string & scope)
 
         if (!token.empty()) {
             auto cache = tokenCache.lock();
-            cache->tokens[scope] = token;
+            // Re-check to avoid overwriting a token inserted by another thread.
+            cache->tokens.emplace(scope, token);
         }
         return token;
     } catch (std::exception & e) {
