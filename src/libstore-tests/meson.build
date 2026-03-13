@@ -73,6 +73,7 @@ sources = files(
   'nar-info-disk-cache.cc',
   'nar-info.cc',
   'nix_api_store.cc',
+  'oci-binary-cache-store.cc',
   'outputs-spec.cc',
   'path-info.cc',
   'path.cc',

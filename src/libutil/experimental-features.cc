@@ -25,7 +25,7 @@ struct ExperimentalFeatureDetails
  * feature, we either have no issue at all if few features are not added
  * at the end of the list, or a proper merge conflict if they are.
  */
-constexpr size_t numXpFeatures = 1 + static_cast<size_t>(Xp::BLAKE3Hashes);
+constexpr size_t numXpFeatures = 1 + static_cast<size_t>(Xp::OCIBinaryCacheStore);
 
 constexpr std::array<ExperimentalFeatureDetails, numXpFeatures> xpFeatureDetails = {{
     {
@@ -278,6 +278,20 @@ constexpr std::array<ExperimentalFeatureDetails, numXpFeatures> xpFeatureDetails
             Enables support for BLAKE3 hashes.
         )",
         .trackingUrl = "https://github.com/NixOS/nix/milestone/60",
+    },
+    {
+        .tag = Xp::OCIBinaryCacheStore,
+        .name = "oci-binary-cache-store",
+        .description = R"(
+            Enables support for using OCI (Open Container Initiative)
+            registries as Nix binary caches. This allows storing and
+            fetching Nix store paths using any OCI-compliant container
+            registry (such as GHCR, Docker Hub, or self-hosted registries).
+
+            Use the `oci://` URI scheme to specify the registry and
+            repository, e.g. `oci://ghcr.io/user/nix-cache`.
+        )",
+        .trackingUrl = "https://github.com/NixOS/nix/issues/8400",
     },
 }};
 
