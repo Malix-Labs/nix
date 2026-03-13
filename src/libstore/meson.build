@@ -322,6 +322,7 @@ sources = files(
   'names.cc',
   'nar-info-disk-cache.cc',
   'nar-info.cc',
+  'oci-binary-cache-store.cc',
   'optimise-store.cc',
   'outputs-spec.cc',
   'parsed-derivations.cc',
