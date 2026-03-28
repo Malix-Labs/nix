@@ -52,7 +52,7 @@ static void writeTrustedList(const TrustedList & trustedList)
     writeFile(path, nlohmann::json(trustedList).dump());
 }
 
-void ConfigFile::apply(const Settings & flakeSettings)
+void ConfigFile::apply(const Settings & flakeSettings, bool forceAppend)
 {
     StringSet whitelist{
         "bash-prompt",
@@ -118,7 +118,22 @@ void ConfigFile::apply(const Settings & flakeSettings)
             }
         }
 
-        globalConfig.set(name, valueS);
+        if (forceAppend && !hasPrefix(name, "extra-")) {
+            /* When applying nixConfig from transitive inputs, use append
+               semantics so that list settings (e.g. substituters) from
+               multiple flakes accumulate rather than overwrite each other.
+               Settings already prefixed with "extra-" are passed through
+               as-is since the underlying Config::set already treats them
+               as appends. Non-appendable settings (e.g. booleans, strings)
+               are skipped to prevent transitive inputs from silently
+               overriding the root flake's configuration. */
+            if (!globalConfig.set("extra-" + name, valueS)) {
+                debug("skipping non-appendable nixConfig setting '%s' from transitive flake input", name);
+                continue;
+            }
+        } else {
+            globalConfig.set(name, valueS);
+        }
     }
 }
 
