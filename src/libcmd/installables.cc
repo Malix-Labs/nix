@@ -68,7 +68,6 @@ MixFlakeOptions::MixFlakeOptions()
 
     addFlag({
         .longName = "recursive-nix-config",
-        .shortName = 'r',
         .description = "Apply nixConfig recursively for transitive flake inputs.",
         .category = category,
         .handler = {[&]() {

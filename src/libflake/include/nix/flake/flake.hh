@@ -60,7 +60,7 @@ struct ConfigFile
 
     std::map<std::string, ConfigValue> settings;
 
-    void apply(const Settings & settings);
+    void apply(const Settings & settings, bool forceAppend = false);
 };
 
 /**
