@@ -150,38 +150,6 @@ EvalCommand::EvalCommand()
     });
 }
 
-MixRegistryOptions::MixRegistryOptions()
-{
-    auto category = "Common registry-related options";
-
-    addFlag({
-        .longName = "registry",
-        .description = "The registry to operate on.",
-        .category = category,
-        .labels = {"registry"},
-        .handler = {&registryPath},
-    });
-}
-
-std::shared_ptr<fetchers::Registry> MixRegistryOptions::getRegistry()
-{
-    if (registry)
-        return registry;
-    if (registryPath.empty())
-        registry = fetchers::getUserRegistry(fetchSettings);
-    else
-        registry = fetchers::getCustomRegistry(fetchSettings, registryPath);
-    return registry;
-}
-
-std::filesystem::path MixRegistryOptions::getRegistryPath()
-{
-    if (registryPath.empty())
-        return fetchers::getUserRegistryPath().string();
-    else
-        return registryPath;
-}
-
 EvalCommand::~EvalCommand()
 {
     if (evalState)

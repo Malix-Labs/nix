@@ -3,9 +3,49 @@
 #include "nix/expr/eval.hh"
 #include "nix/store/store-api.hh"
 #include "nix/fetchers/fetchers.hh"
+#include "nix/fetchers/registry.hh"
 
 using namespace nix;
 using namespace nix::flake;
+
+struct MixRegistryOptions : virtual Args
+{
+    std::string registryPath;
+
+private:
+    std::shared_ptr<fetchers::Registry> registry;
+
+public:
+    MixRegistryOptions()
+    {
+        addFlag({
+            .longName = "registry",
+            .description = "The registry to operate on.",
+            .category = "Common registry-related options",
+            .labels = {"registry"},
+            .handler = {&registryPath},
+        });
+    }
+
+    std::shared_ptr<fetchers::Registry> getRegistry()
+    {
+        if (registry)
+            return registry;
+        if (registryPath.empty())
+            registry = fetchers::getUserRegistry(fetchSettings);
+        else
+            registry = fetchers::getCustomRegistry(fetchSettings, registryPath);
+        return registry;
+    }
+
+    std::filesystem::path getRegistryPath()
+    {
+        if (registryPath.empty())
+            return fetchers::getUserRegistryPath().string();
+        else
+            return registryPath;
+    }
+};
 
 struct CmdRegistryList : StoreCommand, MixRegistryOptions
 {

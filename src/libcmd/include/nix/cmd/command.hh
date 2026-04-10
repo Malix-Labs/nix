@@ -7,7 +7,6 @@
 #include "nix/store/path.hh"
 #include "nix/store/store-reference.hh"
 #include "nix/flake/lockfile.hh"
-#include "nix/fetchers/registry.hh"
 
 #include <optional>
 
@@ -147,24 +146,6 @@ struct MixFlakeOptions : virtual Args, EvalCommand
     {
         return {};
     }
-};
-
-/**
- * A mixin class for commands that manage registries, adding a few
- * standard registry-related options/flags.
- */
-struct MixRegistryOptions : virtual Args
-{
-    std::string registryPath;
-
-    MixRegistryOptions();
-
-    std::shared_ptr<fetchers::Registry> getRegistry();
-
-    std::filesystem::path getRegistryPath();
-
-private:
-    std::shared_ptr<fetchers::Registry> registry;
 };
 
 struct SourceExprCommand : virtual Args, MixFlakeOptions
