@@ -150,7 +150,7 @@ struct MixFlakeOptions : virtual Args, EvalCommand
 };
 
 /**
- * A mixin class for commands that manage the flake registry, adding a few
+ * A mixin class for commands that manage registries, adding a few
  * standard registry-related options/flags.
  */
 struct MixRegistryOptions : virtual Args
