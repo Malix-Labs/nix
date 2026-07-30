@@ -7,21 +7,22 @@
 
 namespace nix {
 
-class RegistryCommand : virtual Args
+struct MixRegistryOptions : virtual Args
 {
-    std::string registry_path;
+    std::string registryPath;
 
+private:
     std::shared_ptr<fetchers::Registry> registry;
 
 public:
-
-    RegistryCommand()
+    MixRegistryOptions()
     {
         addFlag({
             .longName = "registry",
             .description = "The registry to operate on.",
+            .category = "Common registry-related options",
             .labels = {"registry"},
-            .handler = {&registry_path},
+            .handler = {&registryPath},
         });
     }
 
@@ -29,25 +30,23 @@ public:
     {
         if (registry)
             return registry;
-        if (registry_path.empty()) {
+        if (registryPath.empty())
             registry = fetchers::getUserRegistry(fetchSettings);
-        } else {
-            registry = fetchers::getCustomRegistry(fetchSettings, registry_path);
-        }
+        else
+            registry = fetchers::getCustomRegistry(fetchSettings, registryPath);
         return registry;
     }
 
     std::filesystem::path getRegistryPath()
     {
-        if (registry_path.empty()) {
+        if (registryPath.empty())
             return fetchers::getUserRegistryPath().string();
-        } else {
-            return registry_path;
-        }
+        else
+            return registryPath;
     }
 };
 
-struct CmdRegistryList : StoreCommand
+struct CmdRegistryList : StoreCommand, MixRegistryOptions
 {
     std::string description() override
     {
@@ -65,7 +64,9 @@ struct CmdRegistryList : StoreCommand
     {
         using namespace fetchers;
 
-        auto registries = getRegistries(fetchSettings, *store);
+        auto registries = registryPath.empty()
+            ? getRegistries(fetchSettings, *store)
+            : Registries{getRegistry()};
 
         for (auto & registry : registries) {
             for (auto & entry : registry->entries) {
@@ -75,6 +76,7 @@ struct CmdRegistryList : StoreCommand
                     registry->type == Registry::Flag     ? "flags "
                     : registry->type == Registry::User   ? "user  "
                     : registry->type == Registry::System ? "system"
+                    : registry->type == Registry::Custom ? "custom"
                                                          : "global",
                     entry.from.toURLString(),
                     entry.to.toURLString(attrsToQuery(entry.extraAttrs)));
@@ -83,7 +85,7 @@ struct CmdRegistryList : StoreCommand
     }
 };
 
-struct CmdRegistryAdd : MixEvalArgs, Command, RegistryCommand
+struct CmdRegistryAdd : MixEvalArgs, Command, MixRegistryOptions
 {
     std::string fromUrl, toUrl;
 
@@ -119,7 +121,7 @@ struct CmdRegistryAdd : MixEvalArgs, Command, RegistryCommand
     }
 };
 
-struct CmdRegistryRemove : RegistryCommand, Command
+struct CmdRegistryRemove : MixRegistryOptions, Command
 {
     std::string url;
 
@@ -148,7 +150,7 @@ struct CmdRegistryRemove : RegistryCommand, Command
     }
 };
 
-struct CmdRegistryPin : RegistryCommand, EvalCommand
+struct CmdRegistryPin : MixRegistryOptions, EvalCommand
 {
     std::string url;
 
